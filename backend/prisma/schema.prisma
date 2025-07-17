@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String         @id @default(cuid())
+  username  String         @unique
+  password  String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model Wave {
+  id                       String          @id @default(uuid())
+  name                     String
+  heartRate                Int
+  pixelsPerMv              Float
+  defaultPWavesPerQrs      Int
+  enableRWavePattern       Boolean
+  rWavesInPattern          Int?
+  applyRWaveAfterNQrs      Int?
+  enablePWavePattern       Boolean
+  pWavesInPattern          Int?
+  applyPWaveAfterNQrs      Int?
+  enableCustomBeatSequence Boolean
+  normalBeatsBeforeRepeat  Int?
+  waveParameters           WaveParameter[]
+}
+
+model WaveParameter {
+  id              String  @id @default(uuid())
+  waveId          String
+  wave            Wave    @relation(fields: [waveId], references: [id], onDelete: Cascade)
+  isDefault       Boolean
+  ordinal         Int?
+  pWaveHeight     Float
+  pWaveBreadth    Float
+  qWaveHeight     Float
+  qWaveBreadth    Float
+  rWaveHeight     Float
+  rWaveBreadth    Float
+  sWaveHeight     Float
+  sWaveBreadth    Float
+  tWaveHeight     Float
+  tWaveBreadth    Float
+  pqSegmentLength Float
+  stSegmentLength Float
+  tpSegmentLength Float
+}

@@ -1,0 +1,1 @@
+export const IDENTITY_KEY: string = 'userIdentity';
