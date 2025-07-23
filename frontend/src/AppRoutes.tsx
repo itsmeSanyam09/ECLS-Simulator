@@ -9,7 +9,7 @@ import {
 } from "./common/constants/Route.constant";
 import LoginPage from "./auth/pages/Login";
 import NotFound from "./common/pages/404";
-import ECGGenerator from "./wave/pages/ECGGenerator";
+import ShowWaves from "./wave/pages/ShowWaves"
 import WaveList from "./wave/pages/WaveList";
 
 export const AuthenticatedRoutes: RouteObject[] = [
@@ -27,7 +27,7 @@ export const AuthenticatedRoutes: RouteObject[] = [
   },
   {
     path: CREATE_PATTERN_ROUTE + '/:id?',
-    element: <ECGGenerator />,
+    element: <ShowWaves />,
   },
 ];
 

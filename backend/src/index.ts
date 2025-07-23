@@ -1,4 +1,4 @@
-import express from "express";
+import express, { urlencoded } from "express";
 import dotenv from "dotenv";
 import cors, { CorsOptions } from "cors";
 import { HealthRouter } from "./routes/health.route";
@@ -22,6 +22,7 @@ const io = new Server(server, {
 });
 
 dotenv.config();
+app.use(express.urlencoded({extended:true}))
 app.use(express.json());
 app.use(
   cors({
