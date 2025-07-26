@@ -7,10 +7,12 @@ import {
   WATCH_SESSION_ROUTE,
   WAVE_LIST_ROUTE,
 } from "./common/constants/Route.constant";
+import Trainer from "./wave/trainer/Trainer";
 import LoginPage from "./auth/pages/Login";
 import NotFound from "./common/pages/404";
 import ShowWaves from "./wave/pages/ShowWaves"
 import WaveList from "./wave/pages/WaveList";
+import Trainee from "./wave/trainee/Trainee";
 
 export const AuthenticatedRoutes: RouteObject[] = [
   {
@@ -24,6 +26,10 @@ export const AuthenticatedRoutes: RouteObject[] = [
   {
     path: WAVE_LIST_ROUTE,
     element: <WaveList />,
+  },
+  {
+    path: CREATE_SESSION_ROUTE + '/:id?',
+    element: <Trainer />
   },
   {
     path: CREATE_PATTERN_ROUTE + '/:id?',

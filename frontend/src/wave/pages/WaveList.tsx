@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { listWaves, deleteWave } from "../Services/ApiService";
 import type { Wave } from "../models/WaveModels";
-import { Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil, ViewIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -67,7 +67,7 @@ const WaveList: React.FC = () => {
             waves.map((wave, i) => (
               <tr
                 key={wave.id}
-                className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                className={i % 2 === 0 ? "bg-white" : "bg-gray-50"} onClick={()=>{navigate(`/create-session/${wave.id}`)}}
               >
                 <td className="px-4 py-3">{wave.name}</td>
                 <td className="px-4 py-3 text-center">
@@ -90,6 +90,7 @@ const WaveList: React.FC = () => {
                     />
                     <span className="sr-only">Delete</span>
                   </button>
+
                 </td>
               </tr>
             ))

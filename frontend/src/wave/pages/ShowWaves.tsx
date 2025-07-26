@@ -152,6 +152,19 @@ const App: React.FC = () => {
     ]);
   };
 
+  const converted:WaveParameter[] = fields.map(obj =>
+    Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => {
+        if (key === "isDefault") {
+          return [key, value === "true"];
+        }
+        return [key, parseFloat(value)];
+      })
+    )
+);
+console.log("fields converted",converted)
+
+
   const updateField = (index: number, key: string, value: string) => {
     setFields((prevFields) => {
       const newFields = [...prevFields];
@@ -200,7 +213,7 @@ const App: React.FC = () => {
           stSegmentLength: parseFloat(refs.l_st.current?.value),
           tpSegmentLength: parseFloat(refs.l_tp.current?.value),
         } as WaveParameter,
-        ...fields,
+        ...converted
       ],
     };
     createWave(wave);
