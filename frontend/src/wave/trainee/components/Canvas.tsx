@@ -1,14 +1,25 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Wave, WaveParameter } from '../../models/WaveModels';
 import { boolean } from 'zod';
 
 interface CanvasContainerProps {
-  refs: WaveParameter;
-  other_refs: Wave;
-  fields: WaveParameter[];
+
+  controllable_refs: any;
+}
+function useDidUpdateEffect(effect: () => void, deps: any[]) {
+  const didMount = useRef(false);
+
+  useEffect(() => {
+    if (didMount.current) {
+      effect();
+    } else {
+      didMount.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 }
 
-const Canvascontainer: React.FC<CanvasContainerProps> = ({refs,other_refs,fields}) => {
+const Canvascontainer: React.FC<CanvasContainerProps> = ({controllable_refs}) => {
   const svg = useRef<SVGSVGElement | null>(null);
   let animationFrameId: number;
   let lastTimestamp: number = 0;
@@ -26,44 +37,22 @@ const Canvascontainer: React.FC<CanvasContainerProps> = ({refs,other_refs,fields
   let customBeatsParameters = []
   const someBeats = useRef([]);
 
-
-function mapWaveToBeat(wave: WaveParameter): beats {
-  return {
-    h_p: wave.pWaveHeight.toString(),
-    b_p: wave.pWaveBreadth.toString(),
-    h_q: wave.qWaveHeight.toString(),
-    b_q: wave.qWaveBreadth.toString(),
-    h_r: wave.rWaveHeight.toString(),
-    b_r: wave.rWaveBreadth.toString(),
-    h_s: wave.sWaveHeight.toString(),
-    b_s: wave.sWaveBreadth.toString(),
-    h_t: wave.tWaveHeight.toString(),
-    b_t: wave.tWaveBreadth.toString(),
-    l_pq: wave.pqSegmentLength.toString(),
-    l_st: wave.stSegmentLength.toString(),
-    l_tp: wave.tpSegmentLength.toString(),
-  };
-}
-
-const beats_parameters = fields === undefined ? []:fields.map(mapWaveToBeat)
-
-  
   const getParams = () =>({
-    heart_rate: parseFloat(other_refs.heartRate),
-    h_p: parseFloat(refs.pWaveHeight),
-    b_p : parseFloat(refs.pWaveBreadth),
-    h_q : parseFloat(refs.qWaveHeight),
-    b_q : parseFloat(refs.qWaveBreadth),
-    h_r : parseFloat(refs.rWaveHeight),
-    b_r : parseFloat(refs.rWaveBreadth),
-    h_s : parseFloat(refs.sWaveHeight),
-    b_s : parseFloat(refs.sWaveBreadth),
-    h_t : parseFloat(refs.tWaveHeight),
-    b_t : parseFloat(refs.tWaveBreadth),
-    l_pq : parseFloat(refs.pqSegmentLength),
-    l_st : parseFloat(refs.stSegmentLength),
-    l_tp : parseFloat(refs.tpSegmentLength),
-    n_p : parseFloat(other_refs.defaultPWavesPerQrs),
+    heart_rate: parseFloat(controllable_refs.heartRate.current.value),
+    h_p: parseFloat("0.15"),
+    b_p : parseFloat("0.08"),
+    h_q : parseFloat("-0.1"),
+    b_q : parseFloat("0.025"),
+    h_r : parseFloat("1.2"),
+    b_r : parseFloat("0.05"),
+    h_s : parseFloat("-0.25"),
+    b_s : parseFloat("0.025"),
+    h_t : parseFloat("0.2"),
+    b_t : parseFloat("0.16"),
+    l_pq : parseFloat("0.08"),
+    l_st : parseFloat("0.12"),
+    l_tp : parseFloat("0.3"),
+    n_p : parseFloat("1"),
 
   });
 
@@ -122,14 +111,15 @@ const beats_parameters = fields === undefined ? []:fields.map(mapWaveToBeat)
   const y0 = svg.current.height.baseVal.value / 2;
   const pts = [];
   const dt = 1 / PIXELS_PER_SECOND;
-  const rWaveEnabled = other_refs.enableRWavePattern;
-  const rWaveCountInput = parseInt(other_refs.rWavesInPattern);
-  const rWaveIntervalInput = parseInt(other_refs.applyRWaveAfterNQrs, 10);
-  const pWaveEnabled = other_refs.pWavesInPattern
-  const pWaveCountInput = parseInt(other_refs.pWavesInPattern, 10);
-  const pWaveIntervalInput = parseInt(other_refs.applyPWaveAfterNQrs, 10);
-  const useCustomBeatParametersInput = boolean(other_refs.enableCustomBeatSequence);
-  const repeatIntervalInput = parseInt(other_refs.normalBeatsBeforeRepeat, 10);
+  const rWaveEnabled = false;
+  const rWaveCountInput = parseInt("2");
+  const rWaveIntervalInput = parseInt("5", 10);
+  const pWaveEnabled = false
+  const pWaveCountInput = parseInt("2", 10);
+  const pWaveIntervalInput = parseInt("3", 10);
+  const useCustomBeatParametersInput = false;
+  const repeatIntervalInput = parseInt("10", 10);
+  
   let rCycleCounterLocal = globalRCycleCounter;
   let pCycleCounterLocal = globalPCycleCounter;
   let beatCounter = globalBeatCounter;
@@ -235,7 +225,7 @@ const beats_parameters = fields === undefined ? []:fields.map(mapWaveToBeat)
           }
           pts.push({
               x: t * PIXELS_PER_SECOND,
-              y: y0 - v * parseFloat(other_refs.pixelsPerMv)
+              y: y0 - v * parseFloat(controllable_refs.pixelsPerMv.current.value)
           });
       }
       tElapsed += cycleDuration;
@@ -261,13 +251,23 @@ const beats_parameters = fields === undefined ? []:fields.map(mapWaveToBeat)
     let idx =  pathPoints.current.findIndex(pt => pt.x >= pointerX);
     if (idx < 0) idx = pathPoints.current.length - 1;
     if (firstSweep) {
-        drawnPoints.current = pathPoints.current.slice(0, idx + 1);
+        // Replace the full slice with a partial update
+        const es = pointerX - ERASE_WIDTH / 2, ee = pointerX + ERASE_WIDTH / 2;
+        const si = pathPoints.current.findIndex(pt => pt && pt.x >= es);
+        const ei = pathPoints.current.findIndex(pt => pt && pt.x > ee);
+        
+        for (let i = (si < 0 ? 0 : si); i < (ei < 0 ? pathPoints.current.length : ei); i++) {
+            drawnPoints.current[i] = pathPoints.current[i];
+        }
+    
         waveformPath.current.setAttribute("d", pointsToPath(drawnPoints.current));
+        
         if (pointerX > w){ 
             firstSweep = false;
             pathPoints.current = generateWaveformPoints();
         }
-    } 
+    }
+
     else {
         if (pointerX > w) {
             pointerX = 0; // 🟢 Just resets the visual pointer
@@ -291,49 +291,38 @@ const beats_parameters = fields === undefined ? []:fields.map(mapWaveToBeat)
   }
 
 
-const applyNewParams = () => {
-    customBeatsParameters = [];
-    beats_parameters.forEach((obj,index) => {
-        const beat = {}
-        Object.entries(obj).forEach(([key,value]) => {
-            beat[key] = parseFloat(value);
+// const applyNewParams = () => {
+//     customBeatsParameters = [];
+//     beats_parameters.forEach((obj,index) => {
+//         const beat = {}
+//         Object.entries(obj).forEach(([key,value]) => {
+//             beat[key] = parseFloat(value);
 
-        })
-        customBeatsParameters.push(beat)
-    })
-    someBeats.current = customBeatsParameters;
-
-
-  globalRCycleCounter = 0;
-  globalPCycleCounter = 0;
-  globalBeatCounter = 0;
-  globalCustomIdx = 0;
-  globalWaitingNormalBeats = 0;
+//         })
+//         customBeatsParameters.push(beat)
+//     })
+//     someBeats.current = customBeatsParameters;
 
 
-  pathPoints.current = generateWaveformPoints();
-};
-useEffect(()=>{
-    
-    
-    drawnPoints.current = Array(pathPoints.current.length).fill(null);
+//   globalRCycleCounter = 0;
+//   globalPCycleCounter = 0;
+//   globalBeatCounter = 0;
+//   globalCustomIdx = 0;
+//   globalWaitingNormalBeats = 0;
+
+
+//   pathPoints.current = generateWaveformPoints();
+// };
+useEffect(() => {
     pathPoints.current = generateWaveformPoints();
     animationFrameId = requestAnimationFrame(animationLoop);
-    applyNewParams()
 
+}, [])
 
-
-},[])
-
-// useEffect(()=>{
-//     document.getElementById("applyBtn").addEventListener("click", applyNewParams);
-
+useEffect(()=>{
     
-// },[fields])
-
-
-
-
+    pathPoints.current = generateWaveformPoints();
+},[controllable_refs.current_heart_rate,controllable_refs.currentPixelsPerMv])
 
   return (
     <>

@@ -1,10 +1,12 @@
 import { Link } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
-import { List, SquarePlus } from "lucide-react";
+import { List, SquarePlus, Presentation,GraduationCap } from "lucide-react";
 import ecgIcon from "/ecg-icon.png";
 import {
   CREATE_PATTERN_ROUTE,
   WAVE_LIST_ROUTE,
+  CREATE_SESSION_ROUTE,
+  WATCH_SESSION_ROUTE
 } from "../../constants/Route.constant";
 
 type NavItem = {
@@ -24,6 +26,16 @@ const navItems: NavItem[] = [
     icon: <SquarePlus />,
     name: "Add Wave Pattern",
     path: CREATE_PATTERN_ROUTE,
+  },
+  {
+    icon: <Presentation />,
+    name: "Trainer",
+    path: CREATE_SESSION_ROUTE
+  },
+  {
+    icon: <GraduationCap />,
+    name: "Trainee",
+    path: WATCH_SESSION_ROUTE,
   },
 ];
 
